@@ -1,0 +1,112 @@
+import React, {useState} from 'react'
+import {AiOutlineMinus, AiOutlinePlus,AiFillStar, AiOutlineStar} from 'react-icons/ai';
+import "react-responsive-carousel/lib/styles/carousel.min.css";
+import ReactDOM from 'react-dom';
+import { Carousel } from 'react-responsive-carousel'; 
+import { client } from '@/lib/client';
+import { urlFor } from '@/lib/client';
+import { Product } from '@/components';
+import Link from 'next/link';
+
+import { BiBorderOuter, BiHotel, BiTab, BiCar, BiBuildingHouse, BiBath, BiBed } from "react-icons/bi";
+
+const ProductDetails = ({ product, products}) => {
+  const {image, name, details, price}= product;
+  const [index, setIndex] = useState (0);
+  const renderSlides= image?.map((item, i) => (
+    <img 
+    key={i}
+    src={urlFor(item)}
+
+
+    onMouseEnter={() => setIndex(i)}
+  />
+  ));
+ 
+   return (
+      <div>    
+         <div className="titulo"> <h1> {name}</h1> </div>
+  
+        <div className="product-detail-container" >
+       
+          <div>
+          <div className="carousel-container" style={{ width: '900px', height: '600px' }}>
+ 
+          <Carousel>
+  {renderSlides}
+</Carousel>
+</div>
+       
+          </div>
+  
+        <div className="product-detail-desc">
+            <h1> Descrição:</h1>
+            <h4> Detalhes:</h4>
+            <p>{details}</p>
+            <p className="price">${price}</p>
+            <Link href="https://contate.me/imoveiscwb">
+  
+          
+        <div className="buttons" > 
+            <button type="button" className="buy-now" > Agende uma visita </button>
+        </div></Link>
+        </div>
+      </div>
+     
+    <div className="container-esp">
+      <p>Especificações:</p>
+      <p className="esp">
+        <BiBorderOuter/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <BiBed />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <BiHotel /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <BiTab/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <BiCar/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <BiBuildingHouse/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <BiBath/> 
+      </p>
+    </div>
+  
+      <div className="maylike-products-wrapper">
+        <h2>Veja também</h2>
+        <div className="marquee">
+            <div className="maylike-products-container track">
+            {products.map((item) => (
+                <Product key={item._id} product={item} />
+              ))}
+            </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export const getStaticPaths = async () => {
+    const query = `*[_type == "product"] {
+          slug {
+              current
+          }
+      }`
+    const products = await client.fetch(query)
+    const paths = products.map((product) => ({
+      params: { slug: product.slug.current }
+    }))
+  
+    return {
+      paths,
+      fallback: 'blocking'
+    }
+  }
+
+export const getStaticProps = async ({ params: { slug } }) => {
+    const query = `*[_type == "product" && slug.current == '${slug}'][0]`
+    const product = await client.fetch(query)
+  
+    const productsQuery = `*[_type == "product"]`
+    const products = await client.fetch(productsQuery)
+  
+    return {
+      props: { products, product }
+    }
+  }
+ 
+export default ProductDetails
